@@ -1,405 +1,1681 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Offline FX Converter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1a73e8">
-  <link rel="manifest" href="manifest.json">
-  <style>
-    :root {
-      --primary: #1a73e8;
-      --bg: #f8f9fa;
-      --text: #202124;
-      --border: #dadce0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .container {
-      max-width: 640px;
-      margin: 24px auto;
-      padding: 0 16px;
-    }
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 500;
-      margin-bottom: 12px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(60,64,67,0.2);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .row label {
-      font-size: 0.85rem;
-      color: #5f6368;
-      min-width: 60px;
-    }
-    input[type="number"] {
-      flex: 1;
-      padding: 8px;
-      font-size: 1rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-    }
-    select {
-      min-width: 90px;
-      padding: 8px;
-      font-size: 0.95rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: #fff;
-    }
-    button {
-      padding: 8px 16px;
-      border-radius: 4px;
-      border: none;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-    button[disabled] {
-      opacity: 0.6;
-      cursor: default;
-    }
-    .result {
-      font-size: 1.3rem;
-      font-weight: 500;
-      margin-top: 8px;
-    }
-    .meta {
-      font-size: 0.8rem;
-      color: #5f6368;
-      margin-top: 6px;
-    }
-    .meta span.status-online {
-      color: #188038;
-      font-weight: 600;
-    }
-    .meta span.status-offline {
-      color: #d93025;
-      font-weight: 600;
-    }
-    .rate-info {
-      font-size: 0.9rem;
-      margin-top: 4px;
-      color: #5f6368;
-    }
-    .small-link {
-      font-size: 0.8rem;
-      color: var(--primary);
-      text-decoration: underline;
-      cursor: pointer;
-      border: none;
-      background: none;
-      padding: 0;
-      margin-top: 4px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Currency Converter (Offline‑friendly)</h1>
+<!doctype html>
+<!--For proper rendering-->
+<html lang="en" data-theme="dark">
+  <!--Define this page as english and dark mode by default-->
+  <head>
+    <meta charset="UTF-8" />
+    <!--Set alphabet system to use-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--Sets the page to be mobile responsive with device-width-->
+    <title>FX Rate Calculator</title>
+    <!--title-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <!--preload fonts for faster loading-->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <!--Sets fonts (Inter for text, Jetbrains Mono for numbers)-->
+    <!--Groups colours as variables-->
+    <style>
+      /* ========================================================
+       Art direction: Finance FX tool → precision, dark-first
+       Palette: near-black surfaces, teal primary accent
+       Typography: Inter body + JetBrains Mono for numbers
+       Density: compact, functional
+    ======================================================== */
 
-    <div class="card">
-      <div class="row">
-        <label for="amount">Amount</label>
-        <input id="amount" type="number" step="0.01" value="1">
-      </div>
+      :root,
+      [data-theme="light"] {
+        --color-bg: #f5f4f0;
+        --color-surface: #f9f8f5;
+        --color-surface-offset: #eeece8;
+        --color-divider: #dcd9d5;
+        --color-border: #d0cdc6;
+        --color-text: #1c1a16;
+        --color-text-muted: #6e6c67;
+        --color-text-faint: #b0aea9;
+        --color-primary: #01696f;
+        --color-primary-hover: #0c4e54;
+        --color-primary-highlight: #cedcd8;
+        --color-success: #437a22;
+        --color-success-highlight: #d4dfcc;
+        --color-error: #a12c7b;
+        --color-error-highlight: #e0ced7;
+        --color-gold: #c48a00;
+        --color-gold-highlight: #e9e0c6;
+        --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+        --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.08);
+        --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / 0.12);
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --radius-full: 9999px;
+        --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+        --font-body: "Inter", "Helvetica Neue", sans-serif;
+        --font-mono: "JetBrains Mono", "Consolas", monospace;
+        --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+        --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+        --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+        --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+        --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.25rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-10: 2.5rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+      } /* this sets the colours for light mode */
 
-      <div class="row">
-        <label for="from-currency">From</label>
-        <select id="from-currency"></select>
-      </div>
+      [data-theme="dark"] {
+        --color-bg: #131210;
+        --color-surface: #1a1916;
+        --color-surface-offset: #252420;
+        --color-divider: #2a2926;
+        --color-border: #343230;
+        --color-text: #d4d2cf;
+        --color-text-muted: #7a7875;
+        --color-text-faint: #4e4c4a;
+        --color-primary: #658ab3; /* This is the primary colour of the entire app */
+        --color-primary-hover: #3c5e81;
+        --color-primary-highlight: #1e3535;
+        --color-success: #6daa45;
+        --color-success-highlight: #1e2e18;
+        --color-error: #d163a7;
+        --color-error-highlight: #2e1d28;
+        --color-gold: #e8af34;
+        --color-gold-highlight: #2a2012;
+        --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+        --shadow-md: 0 4px 12px oklch(0 0 0 / 0.4);
+        --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.5);
+      } /*this sets the colours for dark mode */
 
-      <div class="row">
-        <label for="to-currency">To</label>
-        <select id="to-currency"></select>
-      </div>
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme]) {
+          --color-bg: #131210;
+          --color-surface: #1a1916;
+          --color-surface-offset: #252420;
+          --color-divider: #2a2926;
+          --color-border: #343230;
+          --color-text: #d4d2cf;
+          --color-text-muted: #7a7875;
+          --color-text-faint: #4e4c4a;
+          --color-primary: #4fa3ad;
+          --color-primary-hover: #227f8b;
+          --color-primary-highlight: #1e3535;
+          --color-success: #6daa45;
+          --color-success-highlight: #1e2e18;
+          --color-error: #d163a7;
+          --color-error-highlight: #2e1d28;
+          --color-gold: #e8af34;
+          --color-gold-highlight: #2a2012;
+          --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+          --shadow-md: 0 4px 12px oklch(0 0 0 / 0.4);
+          --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.5);
+        }
+      }
 
-      <div class="row">
-        <button id="convert-button">Convert</button>
-        <button id="swap-button" type="button">Swap</button>
-      </div>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      } /* Removes default browser spacing */
+      html {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        scroll-behavior: smooth;
+      }
+      body {
+        min-height: 100dvh;
+        font-family: var(--font-body);
+        font-size: var(--text-base);
+        color: var(--color-text);
+        background-color: var(--color-bg);
+        transition:
+          background var(--transition-interactive),
+          color var(--transition-interactive);
+      } /* sets the default background and min-height ensures that the background fills with full screen height */
+      img,
+      svg {
+        display: block;
+      } /* Eliminate phantom spacing between components */
+      input,
+      button,
+      select {
+        font: inherit;
+        color: inherit;
+      } /* makes inputs, buttons, and selects inherit the default theme font and color*/
+      button {
+        cursor: pointer;
+        background: none;
+        border: none;
+      } /* Allows for styling from scratch essentially */
+      :focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 3px;
+        border-radius: var(--radius-sm);
+      } /* Basically designs what happens visually when something is clicked */
+      a,
+      button,
+      input,
+      select {
+        transition:
+          color var(--transition-interactive),
+          background var(--transition-interactive),
+          border-color var(--transition-interactive),
+          box-shadow var(--transition-interactive);
+      }
 
-      <div class="result" id="result-display"></div>
-      <div class="rate-info" id="rate-info"></div>
-      <div class="meta">
-        <span id="status-indicator"></span>
-        <br>
-        Last updated: <span id="last-updated">–</span>
+      /* Makes everything transition properly */
+      /* ======== LAYOUT ======== */
+      .app-shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100dvh;
+      }
+
+      /* Makes sure the main content area fits the screen */
+
+      header {
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--space-4) var(--space-6);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      /* The header is where FX Calc and the button to change to light mode is */
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      /* Sets the structuring of the logo to be the icon + text */
+
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+      }
+
+      /* Limits the size of the icon to be 32x32 px and prevents the icon from being squished */
+
+      .logo-text {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--color-text);
+      }
+
+      .logo-text span {
+        color: var(--color-primary);
+      }
+
+      /* Essentially designs the colours and font of the text next to the icon */
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+
+      /* Sets the location of the theme toggle */
+
+      .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text-muted);
+        background: transparent;
+      }
+      .btn-icon:hover {
+        background: var(--color-surface-offset);
+        color: var(--color-text);
+      }
+
+      /* Not entirely sure, I believe this centers icons properly and subtly fills the background */
+
+      main {
+        padding: var(--space-8) var(--space-4);
+        max-width: 680px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* Basically makes sure that components are centered properly on mobile */
+
+      .page-header {
+        margin-bottom: var(--space-8);
+      }
+
+      .page-title {
+        font-size: var(--text-xl);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--color-text);
+        line-height: 1.1;
+        margin-bottom: var(--space-2);
+      }
+
+      .page-subtitle {
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
+        line-height: 1.5;
+      }
+
+      /* Sets spacing and fonts for readability */
+
+      /* ======== CARD ======== */
+      .card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-xl);
+        padding: var(--space-6);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .card + .card {
+        margin-top: var(--space-4);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-bottom: var(--space-5);
+      }
+
+      .card-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        background: var(--color-primary-highlight);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .card-icon svg {
+        color: var(--color-primary);
+      }
+
+      .card-title {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--color-text);
+        letter-spacing: 0.01em;
+      }
+
+      .card-subtitle {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        margin-top: 1px;
+      }
+
+      /* Cards are essentially sections within the HTML that can be styled separately from the background (essentially panels) */
+
+      /* ======== FORM ELEMENTS ======== */
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .field + .field {
+        margin-top: var(--space-4);
+      }
+
+      /* Essentially makes it so that components are one on top of another, and .field + .field has a gap of 4 */
+
+      label {
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--color-text-muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      /* Basically sets the spacing between letters in text for capitaized text for the label */
+
+      .input-row {
+        display: flex;
+        gap: var(--space-3);
+        align-items: stretch;
+      }
+
+      /* Sets input and fetch button side-by-side */
+
+      select,
+      input[type="text"],
+      input[type="number"] {
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--text-sm);
+        color: var(--color-text);
+        width: 100%;
+        appearance: none;
+      }
+
+      /* Essentially sets all input types to be uniform so that it isn't affected by native OS-level styling */
+
+      select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7875' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+        cursor: pointer;
+      }
+
+      /* Injects a custom SVG chevron (arrow) as a backgound image */
+
+      input[type="number"] {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums lining-nums;
+      }
+
+      /* Makes sure the font and size of inputted numbers are uniform */
+
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px oklch(from var(--color-primary) l c h / 0.15);
+      }
+
+      select:hover,
+      input:hover {
+        border-color: var(--color-text-muted);
+      }
+
+      /* This builds the focus ring (like how theres a ring around buttons you select) */
+
+      .btn-fetch {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        padding: var(--space-3) var(--space-5);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        flex-shrink: 0;
+      }
+      .btn-fetch:hover {
+        background: var(--color-primary-hover);
+      }
+      .btn-fetch:active {
+        transform: translateY(1px);
+      }
+      .btn-fetch:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Basically prevents buttons from acting weirdly if there isnt enough space */
+
+      /* ======== LIVE RATE DISPLAY ======== */
+      .rate-display {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--color-surface-offset);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4) var(--space-5);
+        margin-top: var(--space-4);
+        min-height: 64px;
+      }
+
+      /* Makes it so that the result card has a slighly offset border */
+
+      .rate-display.hidden {
+        display: none;
+      }
+
+      /* ensures that the rate display is actually gone if it shouldn't be shown */
+
+      .rate-label {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: var(--space-1);
+      }
+
+      .rate-value {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums lining-nums;
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--color-primary);
+        letter-spacing: -0.01em;
+      }
+
+      .rate-pair {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+      }
+
+      .rate-timestamp {
+        font-size: var(--text-xs);
+        color: var(--color-text-faint);
+        text-align: right;
+      }
+
+      /* Designs the lable, value, pair, and timstamp for the rate */
+
+      /* Loading spinner */
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid oklch(from var(--color-primary) l c h / 0.25);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+
+      /* Designs the spinner */
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner.hidden {
+        display: none;
+      }
+
+      /* Makes the spinner rotate */
+
+      /* Error state */
+      .rate-error {
+        font-size: var(--text-sm);
+        color: var(--color-error);
+        padding: var(--space-3) var(--space-5);
+        background: var(--color-error-highlight);
+        border: 1px solid oklch(from var(--color-error) l c h / 0.3);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-4);
+        display: none;
+      }
+
+      /* Designs the error */
+
+      /* ======== INPUT GRID ======== */
+      .price-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+        margin-top: var(--space-5);
+        align-items: end;
+      }
+
+      @media (max-width: 480px) {
+        .price-inputs {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Creates two equal-width columns divided proportionally in the available space, if the screen is too narrow, make this into one column */
+
+      .input-prefix-wrapper {
+        position: relative;
+      }
+
+      /* Positioning thing */
+
+      .input-prefix {
+        position: absolute;
+        left: var(--space-4);
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--color-text-muted);
+        pointer-events: none;
+        font-family: var(--font-mono);
+        letter-spacing: 0.05em;
+      }
+
+      /* This is for the input and positions the currency selected (e.g., HKD), centering it properly, pointer events also allows it to be clicked through */
+
+      .input-prefix-wrapper input {
+        padding-left: calc(var(--space-4) + 42px);
+      }
+
+      /* Basically starts the input to the right in order to prevent component overlapping */
+
+      /* ======== RESULTS ======== */
+      #results {
+        display: none;
+      }
+
+      /* Makes sure the results stay hidden before the data is fetched */
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+      }
+
+      @media (max-width: 480px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Sets the result grid to be two columns if there is sufficient size */
+
+      .result-tile {
+        border-radius: var(--radius-lg);
+        padding: var(--space-4) var(--space-5);
+        border: 1px solid transparent;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Sets border properly so can be set for both positive and negative */
+
+      .result-tile::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+
+      /* Sets positioning properly */
+
+      .result-tile.positive {
+        background: var(--color-success-highlight);
+        border-color: oklch(from var(--color-success) l c h / 0.2);
+      }
+      .result-tile.positive::before {
+        background: var(--color-success);
+      }
+
+      .result-tile.negative {
+        background: var(--color-error-highlight);
+        border-color: oklch(
+          from var(--color-error) l c h / 0.2
+        ); /* 20% opacity */
+      }
+      .result-tile.negative::before {
+        background: var(--color-error);
+      }
+
+      .result-tile.neutral {
+        background: var(--color-gold-highlight);
+        border-color: oklch(from var(--color-gold) l c h / 0.2);
+      }
+      .result-tile.neutral::before {
+        background: var(--color-gold);
+      }
+
+      /* Sets the colourway for the background, border, and accent bar of the output results of the positive, negative and neutral results */
+
+      .result-tile-label {
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: var(--space-2);
+      }
+
+      .result-tile-value {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums lining-nums;
+        font-size: var(--text-lg);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1;
+        margin-bottom: var(--space-2);
+      }
+
+      .result-tile-desc {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        line-height: 1.4;
+      }
+
+      /* Same thing but the label */
+
+      .result-tile.positive .result-tile-value {
+        color: var(--color-success);
+      }
+      .result-tile.negative .result-tile-value {
+        color: var(--color-error);
+      }
+      .result-tile.neutral .result-tile-value {
+        color: var(--color-gold);
+      }
+
+      /* Sets it so that .result-tile-value inherit from context */
+
+      /* Summary bar */
+      .summary-bar {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-5);
+        background: var(--color-surface-offset);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        margin-top: var(--space-4);
+      }
+
+      .summary-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: var(--radius-full);
+        flex-shrink: 0;
+      }
+
+      .summary-text {
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+        line-height: 1.5;
+      }
+
+      .summary-text strong {
+        color: var(--color-text);
+        font-weight: 600;
+      }
+
+      /* Divider */
+      .divider {
+        height: 1px;
+        background: var(--color-divider);
+        margin: var(--space-5) 0;
+      }
+
+      /* Badge */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px var(--space-2);
+        border-radius: var(--radius-full);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        line-height: 1.6;
+      }
+      .badge-live {
+        background: var(--color-success-highlight);
+        color: var(--color-success);
+      }
+      .badge-cached {
+        background: var(--color-gold-highlight);
+        color: var(--color-gold);
+      }
+
+      /* How it works note */
+      .helper-note {
+        font-size: var(--text-xs);
+        color: var(--color-text-faint);
+        line-height: 1.5;
+        padding: var(--space-3) var(--space-5);
+        background: var(--color-surface-offset);
+        border-radius: var(--radius-md);
+        margin-top: var(--space-5);
+      }
+
+      /* Arrow icons in result tiles */
+      .arrow-icon {
+        display: inline-flex;
+        vertical-align: middle;
+        margin-right: 4px;
+      }
+
+      /* ======================================================
+       WELCOME SCREEN STYLES
+    ====================================================== */
+      .welcome-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: var(--color-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8) var(--space-4);
+        overflow: hidden;
+      }
+
+      /* Subtle grid lines in the background */
+      .welcome-bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(
+            oklch(from var(--color-primary) l c h / 0.04) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            oklch(from var(--color-primary) l c h / 0.04) 1px,
+            transparent 1px
+          );
+        background-size: 48px 48px;
+        pointer-events: none;
+      }
+
+      .welcome-content {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+      }
+
+      /* Logo on welcome screen */
+      .welcome-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-bottom: var(--space-8);
+      }
+
+      .welcome-logo-mark {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+      }
+
+      .welcome-logo-wordmark {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--color-text);
+      }
+
+      .welcome-logo-wordmark span {
+        color: var(--color-primary);
+      }
+
+      /* Main headline */
+      .welcome-title {
+        font-size: var(--text-xl);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: var(--color-text);
+        margin-bottom: var(--space-4);
+      }
+
+      .welcome-title-accent {
+        color: var(--color-primary);
+      }
+
+      .welcome-subtitle {
+        font-size: var(--text-sm);
+        color: var(--color-text-muted);
+        line-height: 1.65;
+        max-width: 420px;
+        margin: 0 auto var(--space-8);
+      }
+
+      /* CTA button */
+      .welcome-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: var(--space-4) var(--space-8);
+        font-size: var(--text-base);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        cursor: pointer;
+        transition:
+          background var(--transition-interactive),
+          transform var(--transition-interactive),
+          box-shadow var(--transition-interactive);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--space-4);
+      }
+
+      .welcome-cta:hover {
+        background: var(--color-primary-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .welcome-cta:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .welcome-footer-note {
+        font-size: var(--text-xs);
+        color: var(--color-text-faint);
+      }
+
+      .welcome-cta.loading {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      @media (max-width: 600px) {
+        .welcome-title {
+          font-size: var(--text-lg);
+        }
+      }
+
+      /* Transition out: slide up + fade */
+      .welcome-screen.leaving {
+        animation: welcome-leave 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      @keyframes welcome-leave {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-24px);
+          pointer-events: none;
+        }
+      }
+
+      /* App shell starts hidden */
+      .app-shell.hidden {
+        display: none;
+      }
+
+      .usd-toggle-row {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        width: 100%;
+        font-size: var(--text-xs);
+        color: var(--color-text-faint);
+        cursor: pointer;
+      }
+
+    </style>
+  </head>
+  <body>
+    <!-- ====================================================
+       WELCOME / LANDING SCREEN
+       Shows first, redirects to the calculator on button click.
+       Uses the same CSS tokens as the main app.
+  ==================================================== -->
+    <div id="welcome-screen" class="welcome-screen">
+      <!-- Animated background grid lines -->
+      <div class="welcome-bg-grid" aria-hidden="true"></div>
+
+      <div class="welcome-content">
+        <!-- Logo repeated on welcome screen -->
+        <div class="welcome-logo">
+          <svg
+            viewBox="0 0 48 48"
+            fill="none"
+            aria-label="FX Calc logo"
+            class="welcome-logo-mark"
+          >
+            <rect
+              width="48"
+              height="48"
+              rx="12"
+              fill="var(--color-primary)"
+              opacity="0.18"
+            />
+            <path
+              d="M10 17h20M26 12l5 5-5 5"
+              stroke="var(--color-primary)"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M38 31H18M22 26l-5 5 5 5"
+              stroke="var(--color-primary)"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div class="welcome-logo-wordmark">FX<span>Helper</span></div>
+          <!-- Welcome logo -->
+        </div>
+
+        <h1 class="welcome-title">
+          Rizzler's<br /><span class="welcome-title-accent"
+            >Forex Helper</span
+          >
+        </h1>
+        <p class="welcome-subtitle">
+          Click "Open Calculator (HK)" if you are exchanging cash in Hong Kong and click "Open Calculator (XX)" if you are abroad. If offline, default rates will apply.
+        </p>
+
+        <!-- CTA button -->
+        <button class="welcome-cta" id="welcome-cta-btn" onclick="enterAppA()">
+          Open Calculator (HK)
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+          <!-- Actual arrow -->
+        </button>
+
+        <button class="welcome-cta" id="welcome-cta-btn" onclick="enterAppB()">
+         Open Calculator (XX)
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+            <!-- Actual arrow -->
+        </button>
+        <!-- Status message shown below the button -->
+          <label class="usd-toggle-row" for="USD-Toggle">
+            <input type="checkbox" id="USD-Toggle">
+            <span>Check if you are exchanging USD</span>
+          </label>
       </div>
-      <button class="small-link" id="refresh-rates" type="button">
-        Refresh rates now
-      </button>
     </div>
 
-    <div class="card">
-      <p class="meta">
-        This converter caches exchange rates on your device. When you are offline,
-        it uses the most recent saved rates until you go online again.
-      </p>
+    <div class="app-shell hidden" id="app-shell">
+      <header>
+        <div class="logo">
+          <!-- SVG Logo: FX exchange arrows -->
+          <svg
+            class="logo-mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-label="FX Calc logo"
+          >
+            <rect
+              width="32"
+              height="32"
+              rx="8"
+              fill="var(--color-primary)"
+              opacity="0.15"
+            />
+            <path
+              d="M7 11h14M18 8l3 3-3 3"
+              stroke="var(--color-primary)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M25 21H11M14 18l-3 3 3 3"
+              stroke="var(--color-primary)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div class="logo-text">FX<span>Helper</span></div>
+          <!-- Logo on header -->
+        </div>
+        <div class="header-actions">
+          <!-- NEW back button -->
+          <button
+            class="btn-icon"
+            onclick="returnToWelcome()"
+            aria-label="Back to home"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <button
+            class="btn-icon"
+            data-theme-toggle
+            aria-label="Switch to light mode"
+            title="Toggle theme"
+          >
+            <!-- Moon icon (for dark mode) -->
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <div class="page-header">
+          <h1 class="page-title">Exchange Rate Calculator</h1>
+          <p class="page-subtitle">
+            Fetch live USD rates and compare your buy/sell prices to the real
+            market rate.
+          </p>
+        </div>
+
+        <!-- Step 1: Currency Lookup -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
+            <div>
+              <div class="card-title">Live Exchange Rate</div>
+              <div class="card-subtitle">
+                Sourced from Open Exchange Rates (free API)
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="currency-select">Currency pair (vs. Base Rate)</label>
+            <div class="input-row">
+              <select id="currency-select">
+                <option value="">— Select a currency —</option>
+                <optgroup label="Frequently Used">
+                  <option value="USD">USD — United States Dollar</option>
+                  <option value="JPY">JPY — Japanese Yen</option>
+                  <option value="KRW">KRW — South Korean Won</option>
+                  <option value="VND">VND — Vietnamese Dong</option>
+                  <option value="CAD">CAD — Canadian Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                </optgroup>
+                <optgroup label="Asia Pacific">
+                  <option value="CNY">CNY — Chinese Yuan</option>
+                  <option value="KRW">KRW — South Korean Won</option>
+                  <option value="SGD">SGD — Singapore Dollar</option>
+                  <option value="TWD">TWD — Taiwan Dollar</option>
+                  <option value="AUD">AUD — Australian Dollar</option>
+                  <option value="NZD">NZD — New Zealand Dollar</option>
+                  <option value="INR">INR — Indian Rupee</option>
+                  <option value="THB">THB — Thai Baht</option>
+                  <option value="MYR">MYR — Malaysian Ringgit</option>
+                  <option value="PHP">PHP — Philippine Peso</option>
+                  <option value="IDR">IDR — Indonesian Rupiah</option>
+                </optgroup>
+                <optgroup label="Europe">
+                  <option value="GBP">GBP — British Pound</option>
+                  <option value="CHF">CHF — Swiss Franc</option>
+                  <option value="SEK">SEK — Swedish Krona</option>
+                  <option value="NOK">NOK — Norwegian Krone</option>
+                  <option value="DKK">DKK — Danish Krone</option>
+                </optgroup>
+                </optgroup>
+              </select>
+              <button class="btn-fetch" id="fetch-btn" onclick="fetchRate()">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                Fetch Rate
+              </button>
+            </div>
+          </div>
+
+          <!-- Spinner + Rate display -->
+          <div
+            id="fetch-spinner"
+            class="spinner hidden"
+            style="margin-top: var(--space-4)"
+          ></div>
+          <div id="rate-display" class="rate-display hidden">
+            <div>
+              <div class="rate-label" id="rate-label">Market Rate</div>
+              <div class="rate-value" id="rate-value">—</div>
+            </div>
+            <div style="text-align: right">
+              <div style="margin-bottom: var(--space-2)">
+                <span class="badge badge-live" id="rate-badge">LIVE</span>
+              </div>
+              <div class="rate-timestamp" id="rate-timestamp"></div>
+            </div>
+          </div>
+          <div class="rate-error" id="rate-error"></div>
+        </div>
+
+        <!-- Step 2: Buy / Sell Inputs -->
+        <div
+          class="card"
+          id="inputs-card"
+          style="opacity: 0.4; pointer-events: none"
+        >
+          <div class="card-header">
+            <div class="card-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                />
+              </svg>
+            </div>
+            <div>
+              <div class="card-title">Buy & Sell Rates</div>
+              <div class="card-subtitle">
+                Just enter the rates listed for the currency you want to purchase. If you only have one rate available, enter that rate into both the "smaller" and "bigger" boxes.
+              </div>
+            </div>
+          </div>
+
+          <div class="price-inputs">
+            <div class="field">
+              <label for="buy-rate">Smaller Number</label>
+              <div class="input-prefix-wrapper">
+                <span class="input-prefix" id="buy-prefix">—</span>
+                <input
+                  type="number"
+                  id="buy-rate"
+                  placeholder="0.000000"
+                  step="0.000001"
+                  min="0"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label for="sell-rate">Bigger Number</label>
+              <div class="input-prefix-wrapper">
+                <span class="input-prefix" id="sell-prefix">—</span>
+                <input
+                  type="number"
+                  id="sell-rate"
+                  placeholder="0.000000"
+                  step="0.000001"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Calculate button -->
+          <div style="margin-top: var(--space-5)">
+            <button
+              class="btn-fetch"
+              id="calc-btn"
+              onclick="calculate()"
+              style="width: 100%; justify-content: center"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="4" />
+                <path d="M8 12h8M12 8v8" />
+              </svg>
+              Calculate
+            </button>
+          </div>
+
+          <!-- Inline result box — hidden until calculate() runs -->
+          <div
+            id="inline-result"
+            style="
+              display: none;
+              margin-top: var(--space-4);
+              background: var(--color-surface-offset);
+              border: 1px solid var(--color-border);
+              border-radius: var(--radius-lg);
+              padding: var(--space-4) var(--space-5);
+            "
+          >
+            <div
+              id="inline-result-text"
+              style="
+                font-family: var(--font-mono);
+                font-size: var(--text-base);
+                font-weight: 600;
+                letter-spacing: -0.01em;
+                color: var(--color-text);
+              "
+            ></div>
+          </div>
+
+          <div class="helper-note">
+            <strong>Rules for purchasing:</strong> The rule here is that any exchange rate less than 0.5% is insane, less than 1% is excellent, between 1% and 3% is good and above 3% is bad.
+        </div>
+
+        <!-- Step 3: Results -->
+        <div id="results" class="card">
+          <div class="card-header">
+            <div
+              class="card-icon"
+              style="background: var(--color-gold-highlight)"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--color-gold)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                <polyline points="16 7 22 7 22 13" />
+              </svg>
+            </div>
+            <div>
+              <div class="card-title">Spread Analysis</div>
+              <div class="card-subtitle">
+                Difference between your rates and the live market rate
+              </div>
+            </div>
+          </div>
+
+          <div class="results-grid" id="results-grid"></div>
+          <div id="summary-bar"></div>
+        </div>
+      </main>
     </div>
-  </div>
 
-  <script>
-    // --- CONFIG: set this to your backend/FX endpoint ---
-    const FX_API_URL = 'https://example.com/api/fx/latest?base=USD';
-    // Expecting JSON: { base: 'USD', date: 'YYYY-MM-DD', timestamp: number, rates: { 'EUR': 0.9, ... } }
+    <script>
+      // ======== WELCOME → CALCULATOR TRANSITION ========
 
-    const STORAGE_KEY_RATES = 'fx-rates-v1';   // stored JSON: { base, date, timestamp, rates }
-    const STORAGE_KEY_LAST_BASE = 'fx-last-base';
-    const STORAGE_KEY_LAST_TO = 'fx-last-to';
+      let entType = 'HK';
 
-    const amountInput = document.getElementById('amount');
-    const fromSelect = document.getElementById('from-currency');
-    const toSelect = document.getElementById('to-currency');
-    const convertButton = document.getElementById('convert-button');
-    const swapButton = document.getElementById('swap-button');
-    const resultDisplay = document.getElementById('result-display');
-    const rateInfo = document.getElementById('rate-info');
-    const statusIndicator = document.getElementById('status-indicator');
-    const lastUpdatedEl = document.getElementById('last-updated');
-    const refreshButton = document.getElementById('refresh-rates');
-
-    let cachedRates = null; // { base, date, timestamp, rates }
-
-    // --- Utility functions ---
-
-    function isOnline() {
-      return navigator.onLine;
-    }
-
-    function loadCachedRates() {
-      const raw = localStorage.getItem(STORAGE_KEY_RATES);
-      if (!raw) return null;
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        console.error('Failed to parse cached rates', e);
-        return null;
-      }
-    }
-
-    function saveCachedRates(data) {
-      localStorage.setItem(STORAGE_KEY_RATES, JSON.stringify(data));
-    }
-
-    function setStatus() {
-      if (isOnline()) {
-        statusIndicator.textContent = 'Online (live rates available)';
-        statusIndicator.className = 'status-online';
-      } else {
-        statusIndicator.textContent = 'Offline (using saved rates if available)';
-        statusIndicator.className = 'status-offline';
-      }
-    }
-
-    function formatTimestamp(ts, dateStr) {
-      if (ts) {
-        const d = new Date(ts * 1000);
-        return d.toLocaleString();
-      }
-      if (dateStr) return dateStr;
-      return '–';
-    }
-
-    function updateLastUpdated() {
-      if (!cachedRates) {
-        lastUpdatedEl.textContent = 'No data yet';
-      } else {
-        lastUpdatedEl.textContent = formatTimestamp(cachedRates.timestamp, cachedRates.date);
-      }
-    }
-
-    function populateCurrencyOptions() {
-      const currencies = cachedRates ? Object.keys(cachedRates.rates) : [];
-      if (!currencies.length) return;
-
-      const prevFrom = localStorage.getItem(STORAGE_KEY_LAST_BASE) || 'USD';
-      const prevTo = localStorage.getItem(STORAGE_KEY_LAST_TO) || 'EUR';
-
-      fromSelect.innerHTML = '';
-      toSelect.innerHTML = '';
-
-      currencies.sort().forEach(code => {
-        const opt1 = document.createElement('option');
-        opt1.value = code;
-        opt1.textContent = code;
-        if (code === prevFrom) opt1.selected = true;
-        fromSelect.appendChild(opt1);
-
-        const opt2 = document.createElement('option');
-        opt2.value = code;
-        opt2.textContent = code;
-        if (code === prevTo) opt2.selected = true;
-        toSelect.appendChild(opt2);
-      });
-    }
-
-    function convertAmount() {
-      if (!cachedRates || !cachedRates.rates) {
-        resultDisplay.textContent = 'No rate data yet. Go online and refresh.';
-        rateInfo.textContent = '';
-        return;
-      }
-      const amount = parseFloat(amountInput.value);
-      const from = fromSelect.value;
-      const to = toSelect.value;
-
-      if (isNaN(amount)) {
-        resultDisplay.textContent = '';
-        rateInfo.textContent = '';
-        return;
-      }
-      if (!from || !to) {
-        resultDisplay.textContent = 'Select currencies.';
-        rateInfo.textContent = '';
-        return;
+      function enterAppA() {
+        entType = 'HK';
+        enterApp();
       }
 
-      localStorage.setItem(STORAGE_KEY_LAST_BASE, from);
-      localStorage.setItem(STORAGE_KEY_LAST_TO, to);
-
-      const base = cachedRates.base;
-      const rates = cachedRates.rates;
-
-      if (!rates[from] || !rates[to]) {
-        resultDisplay.textContent = 'Rate not available for selected pair.';
-        rateInfo.textContent = '';
-        return;
+      function enterAppB() {
+        entType = 'XX';
+        enterApp();
       }
 
-      // Convert via base:
-      // amount (from) -> base -> to
-      // valueInBase = amount / rate[from]; result = valueInBase * rate[to]
-      const valueInBase = amount / rates[from];
-      const result = valueInBase * rates[to];
 
-      resultDisplay.textContent = `${amount.toFixed(2)} ${from} = ${result.toFixed(4)} ${to}`;
-      const pairRate = (rates[to] / rates[from]);
-      rateInfo.textContent = `1 ${from} = ${pairRate.toFixed(6)} ${to}`;
-    }
+      function enterApp() {
+        const welcome = document.getElementById("welcome-screen");
+        const shell = document.getElementById("app-shell");
+        welcome.classList.add("leaving");
+        welcome.addEventListener(
+          "animationend",
+          () => {
+            welcome.style.display = "none";
+            shell.classList.remove("hidden");
+          },
+          { once: true },
+        );
+      }
 
-    async function fetchLatestRates(showToast = true) {
-      if (!isOnline()) {
-        if (showToast) {
-          alert('You are offline. Using saved rates if available.');
+      // ======== THEME TOGGLE ========
+      (function () {
+        const t = document.querySelector("[data-theme-toggle]");
+        const r = document.documentElement;
+        let d =
+          r.getAttribute("data-theme") ||
+          (matchMedia("(prefers-color-scheme:dark)").matches
+            ? "dark"
+            : "light");
+        r.setAttribute("data-theme", d);
+        updateToggleIcon(d);
+
+        t &&
+          t.addEventListener("click", () => {
+            d = d === "dark" ? "light" : "dark";
+            r.setAttribute("data-theme", d);
+            updateToggleIcon(d);
+          });
+
+        function updateToggleIcon(theme) {
+          if (!t) return;
+          t.setAttribute(
+            "aria-label",
+            "Switch to " + (theme === "dark" ? "light" : "dark") + " mode",
+          );
+          t.innerHTML =
+            theme === "dark"
+              ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+              : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
         }
-        return;
-      }
+      })();
 
-      convertButton.disabled = true;
-      refreshButton.disabled = true;
-      refreshButton.textContent = 'Refreshing…';
+      // ======== APP STATE ========
+      let marketRate = null;
+      let selectedCurrency = "";
+      let useRate = null;
+      let quality = null;
+      let resultText = null;
+      let secondToggle = false;
 
-      try {
-        const response = await fetch(FX_API_URL, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        // Basic shape validation
-        if (!data || !data.rates || typeof data.rates !== 'object') {
-          throw new Error('Unexpected rate format');
+      // Cache: avoid re-fetching the same currency within 60 seconds
+      const rateCache = {};
+
+      // ======== FETCH RATE ========
+      async function fetchRate() {
+        const select = document.getElementById("currency-select");
+        const currency = select.value;
+        if (!currency) {
+          showError("Please select a currency first.");
+          return;
         }
 
-        cachedRates = {
-          base: data.base || 'USD',
-          date: data.date || null,
-          timestamp: data.timestamp || Math.floor(Date.now() / 1000),
-          rates: data.rates
-        };
+        selectedCurrency = currency;
+        const btn = document.getElementById("fetch-btn");
+        const spinner = document.getElementById("fetch-spinner");
+        const rateDisplay = document.getElementById("rate-display");
+        const errorEl = document.getElementById("rate-error");
+        const usdToggle = document.getElementById('USD-Toggle');
+        const isUsdBase = usdToggle && usdToggle.checked;
 
-        saveCachedRates(cachedRates);
-        populateCurrencyOptions();
-        updateLastUpdated();
-        convertAmount();
-        if (showToast) {
-          alert('Rates updated.');
+        // Hide previous state
+        rateDisplay.classList.add("hidden");
+        errorEl.style.display = "none";
+        spinner.classList.remove("hidden");
+        btn.disabled = true;
+
+        try {
+          let rate = null;
+
+          // API: Uses ExchangeRate-API
+          if (!isUsdBase) {
+            try {
+              const res = await fetch(
+                `https://open.er-api.com/v6/latest/HKD`,
+              );
+              if (res.ok) {
+                const data = await res.json();
+                rate = data.rates[currency];
+                if (rate) fetchedOk = true;
+              }
+            } catch (e) {}
+          } else {
+            try {
+              const res = await fetch(
+                `https://open.er-api.com/v6/latest/USD`,
+              );
+              if (res.ok) {
+                const data = await res.json();
+                rate = data.rates[currency];
+                if (rate) fetchedOk = true;
+              }
+            } catch (e) {}
+          }
+
+          if (!fetchedOk || !rate) {
+            if (isUSDBase) {
+              const defJSON = {"rates":{"HKD":1,"AED":0.467978,"AFN":8.308692,"ALL":10.269946,"AMD":46.657801,"ANG":0.228095,"AOA":121.202569,"ARS":189.701278,"AUD":0.180073,"AWG":0.228095,"AZN":0.21664,"BAM":0.215529,"BBD":0.254855,"BDT":15.65057,"BGN":0.215529,"BHD":0.047913,"BIF":380.165049,"BMD":0.127428,"BND":0.162989,"BOB":1.49834,"BRL":0.660176,"BSD":0.127428,"BTN":12.160589,"BWP":1.817975,"BYN":0.38509,"BZD":0.254855,"CAD":0.176808,"CDF":292.216418,"CHF":0.103601,"CLF":0.002948,"CLP":116.52988,"CNH":0.859284,"CNY":0.861659,"COP":400.138022,"CRC":57.456123,"CUP":3.058263,"CVE":12.151001,"CZK":2.669937,"DJF":22.646562,"DKK":0.824573,"DOP":7.451896,"DZD":16.946103,"EGP":6.400383,"ERN":1.911414,"ETB":20.468897,"EUR":0.110198,"FJD":0.283152,"FKP":0.094181,"FOK":0.824572,"GBP":0.094181,"GEL":0.333224,"GGP":0.094181,"GHS":1.41432,"GIP":0.094181,"GMD":9.515292,"GNF":1119.145521,"GTQ":0.972376,"GYD":26.655548,"HNL":3.418514,"HRK":0.830288,"HTG":16.669647,"HUF":40.019796,"IDR":2269.267029,"ILS":0.376885,"IMP":0.094181,"INR":12.160589,"IQD":167.337607,"IRR":175473.684211,"ISK":15.671816,"JEP":0.094181,"JMD":20.170814,"JOD":0.090346,"JPY":20.287675,"KES":16.48094,"KGS":11.148329,"KHR":515.223684,"KID":0.180073,"KMF":54.213946,"KRW":180.222709,"KWD":0.039188,"KYD":0.10619,"KZT":59.146605,"LAK":2831.701324,"LBP":11404.771016,"LKR":42.44009,"LRD":23.147687,"LSL":2.062112,"LYD":0.813128,"MAD":1.184865,"MDL":2.203421,"MGA":551.507042,"MKD":6.797122,"MMK":267.908455,"MNT":463.212161,"MOP":1.03,"MRU":5.125933,"MUR":5.994691,"MVR":1.970015,"MWK":222.564764,"MXN":2.168484,"MYR":0.520688,"MZN":8.135078,"NAD":2.062112,"NGN":173.717508,"NIO":4.690328,"NOK":1.204373,"NPR":19.456943,"NZD":0.216505,"OMR":0.048996,"PAB":0.127428,"PEN":0.42944,"PGK":0.563294,"PHP":7.826549,"PKR":35.391961,"PLN":0.474507,"PYG":764.643296,"QAR":0.463836,"RON":0.578104,"RSD":12.929455,"RUB":10.652292,"RWF":188.28445,"SAR":0.477854,"SBD":1.009297,"SCR":1.787464,"SDG":56.997089,"SEK":1.213832,"SGD":0.162989,"SHP":0.094181,"SLE":3.140962,"SLL":3140.96197,"SOS":72.782528,"SRD":4.811624,"SSP":719.970106,"STN":2.699855,"SYP":15.521501,"SZL":2.062112,"THB":4.221893,"TJS":1.17382,"TMT":0.446026,"TND":0.372067,"TOP":0.303792,"TRY":6.10094,"TTD":0.864315,"TVD":0.180073,"TWD":4.07808,"TZS":338.285794,"UAH":5.703617,"UGX":472.840545,"USD":0.127428,"UYU":5.110507,"UZS":1515.885798,"VES":98.443448,"VND":3322.694566,"VUV":15.108833,"WST":0.343387,"XAF":72.285261,"XCD":0.344055,"XCG":0.228095,"XDR":0.093127,"XOF":72.285261,"XPF":13.150168,"YER":30.218826,"ZAR":2.062114,"ZMW":2.399011,"ZWG":3.385408,"ZWL":3.385408}}
+              rate = data.rates[currency];
+            } else {
+              const defJSON = {"rates":{"USD":1,"AED":3.6725,"AFN":65.232318,"ALL":80.608641,"AMD":365.997428,"ANG":1.79,"AOA":925.124163,"ARS":1488.6984,"AUD":1.412876,"AWG":1.79,"AZN":1.700005,"BAM":1.691299,"BBD":2,"BDT":122.852985,"BGN":1.691299,"BHD":0.376,"BIF":2995.389531,"BMD":1,"BND":1.278992,"BOB":11.768554,"BRL":5.185311,"BSD":1,"BTN":95.503237,"BWP":13.873326,"BYN":3.016071,"BZD":2,"CAD":1.387486,"CDF":2282.762394,"CHF":0.812854,"CLF":0.023136,"CLP":914.491985,"CNH":6.743107,"CNY":6.760612,"COP":3137.738998,"CRC":451.814624,"CUP":24,"CVE":95.351383,"CZK":20.944403,"DJF":177.721,"DKK":6.466805,"DOP":58.448237,"DZD":132.956317,"EGP":50.274761,"ERN":15,"ETB":161.629287,"EUR":0.864749,"FJD":2.209786,"FKP":0.738972,"FOK":6.468399,"GBP":0.738973,"GEL":2.614432,"GGP":0.738972,"GHS":11.186249,"GIP":0.738972,"GMD":74.691001,"GNF":8782.429266,"GTQ":7.630205,"GYD":209.187625,"HKD":7.847593,"HNL":26.817763,"HRK":6.51544,"HTG":130.685433,"HUF":313.931645,"IDR":17822.228665,"ILS":2.957027,"IMP":0.738972,"INR":95.503481,"IQD":1311.781001,"IRR":1360178.671172,"ISK":122.989559,"JEP":0.738972,"JMD":157.944567,"JOD":0.709,"JPY":159.225847,"KES":129.213997,"KGS":87.485179,"KHR":4045.402901,"KID":1.412873,"KMF":425.42788,"KRW":1414.860465,"KWD":0.308452,"KYD":0.833333,"KZT":464.505094,"LAK":22327.748375,"LBP":89500,"LKR":333.198729,"LRD":181.731062,"LSL":16.185461,"LYD":6.374207,"MAD":9.298644,"MDL":17.296161,"MGA":4313.186354,"MKD":53.341042,"MMK":2101.767014,"MNT":3631.255794,"MOP":8.083021,"MRU":40.207548,"MUR":47.028122,"MVR":15.447631,"MWK":1744.792371,"MXN":17.018157,"MYR":4.086248,"MZN":63.746953,"NAD":16.185461,"NGN":1358.704328,"NIO":36.810531,"NOK":9.448912,"NPR":152.805179,"NZD":1.698843,"OMR":0.384497,"PAB":1,"PEN":3.370945,"PGK":4.421245,"PHP":61.467872,"PKR":277.780558,"PLN":3.723369,"PYG":5991.418163,"QAR":3.64,"RON":4.536796,"RSD":101.434052,"RUB":83.574704,"RWF":1475.877632,"SAR":3.75,"SBD":7.927128,"SCR":13.991033,"SDG":509.083862,"SEK":9.523479,"SGD":1.278993,"SHP":0.738972,"SLE":24.648991,"SLL":24648.990852,"SOS":571.24645,"SRD":37.9079,"SSP":5535.047158,"STN":21.186314,"SYP":121.87186,"SZL":16.185461,"THB":33.126984,"TJS":9.235078,"TMT":3.49938,"TND":2.920774,"TOP":2.377457,"TRY":47.887954,"TTD":6.752673,"TVD":1.412873,"TWD":31.987323,"TZS":2638.699091,"UAH":44.759236,"UGX":3689.331221,"UYU":40.140662,"UZS":11911.375165,"VES":772.5441,"VND":26072.465562,"VUV":118.147062,"WST":2.696706,"XAF":567.237174,"XCD":2.7,"XCG":1.79,"XDR":0.731273,"XOF":567.237174,"XPF":103.192048,"YER":237.154336,"ZAR":16.185472,"ZMW":18.818143,"ZWG":26.5673,"ZWL":26.5673}}
+              rate = data.rates[currency];
+            }
+          }
+          rateCache[currency] = { rate, time: Date.now() };
+          displayRate(currency, rate, Date.now(), false);
+          enableInputs(currency);
+        } catch (err) {
+          showError(err.message || "Fetch failed. Try again.");
+        } finally {
+          spinner.classList.add("hidden");
+          btn.disabled = false;
         }
-      } catch (err) {
-        console.error(err);
-        if (showToast) {
-          alert('Failed to fetch latest rates. Using saved data if available.');
+      }
+
+      function displayRate(currency, rate, timestamp, fromCache) {
+        if (entType == 'HK') {
+          marketRate = rate**-1;
+        } else {
+          marketRate = rate;
         }
-      } finally {
-        convertButton.disabled = false;
-        refreshButton.disabled = false;
-        refreshButton.textContent = 'Refresh rates now';
+        
+        const rateDisplay = document.getElementById('rate-display');
+        const usdToggle = document.getElementById('USD-Toggle');
+        const isUsdBase = usdToggle && usdToggle.checked;
+
+        document.getElementById('rate-label').textContent = isUsdBase
+          ? `USD / ${currency} Market Rate`
+          : `HKD / ${currency} Market Rate`;
+
+        document.getElementById("rate-value").textContent = formatRate(rate);
+        document.getElementById("rate-badge").textContent = fromCache
+          ? "CACHED"
+          : "LIVE";
+        document.getElementById("rate-badge").className = fromCache
+          ? "badge badge-cached"
+          : "badge badge-live";
+        document.getElementById("rate-timestamp").textContent =
+          "As of " +
+          new Date(timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        rateDisplay.classList.remove("hidden");
       }
-    }
 
-    function init() {
-      setStatus();
-      cachedRates = loadCachedRates();
-      if (cachedRates && cachedRates.rates) {
-        populateCurrencyOptions();
-      }
-      updateLastUpdated();
-
-      // Try to get fresh rates on first load if online
-      if (isOnline()) {
-        fetchLatestRates(false);
+      function showError(msg) {
+        const el = document.getElementById("rate-error");
+        el.textContent = "⚠ " + msg;
+        el.style.display = "block";
+        document.getElementById("fetch-spinner").classList.add("hidden");
       }
 
-      convertAmount();
-    }
+      function enableInputs(currency) {
+        const card = document.getElementById("inputs-card");
+        card.style.opacity = "1";
+        card.style.pointerEvents = "";
+        document.getElementById("buy-prefix").textContent = currency;
+        document.getElementById("sell-prefix").textContent = currency;
+        // Clear old values
+        document.getElementById("buy-rate").value = "";
+        document.getElementById("sell-rate").value = "";
+        document.getElementById("results").style.display = "none";
+        document.getElementById("buy-rate").focus();
+      }
 
-    // --- Event listeners ---
-    window.addEventListener('online', () => {
-      setStatus();
-      // Optionally auto-refresh on reconnect:
-      fetchLatestRates(false);
-    });
-    window.addEventListener('offline', setStatus);
+      // ======== CALCULATE ========
+      function calculate() {
+        if (!marketRate) return;
 
-    amountInput.addEventListener('input', convertAmount);
-    fromSelect.addEventListener('change', convertAmount);
-    toSelect.addEventListener('change', convertAmount);
-    convertButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      convertAmount();
-    });
-    swapButton.addEventListener('click', () => {
-      const from = fromSelect.value;
-      const to = toSelect.value;
-      if (!from || !to) return;
-      fromSelect.value = to;
-      toSelect.value = from;
-      convertAmount();
-    });
-    refreshButton.addEventListener('click', () => fetchLatestRates(true));
+        const buyVal = parseFloat(document.getElementById("buy-rate").value);
+        const sellVal = parseFloat(document.getElementById("sell-rate").value);
 
-    // --- Service worker registration (same pattern as your first app) ---
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
-          console.error('SW registration failed', err);
+        const hasBuy = !isNaN(buyVal) && buyVal > 0;
+        const hasSell = !isNaN(sellVal) && sellVal > 0;
+
+        if (!hasBuy && !hasSell) {
+          document.getElementById("results").style.display = "none";
+          document.getElementById("inline-result").style.display = "none";
+          return;
+        }
+
+        // ── Build the inline summary line ──────────────────────────
+        const parts = [];
+
+        // Sell (larger number) is the rate you get when you exchange in Hong Kong
+        // E.g., buy 7.772, sell 7.792, this means you pay 7.792 for each usd, but they buy your USD they will pay you 7.7772
+
+        if (hasBuy) {
+          const buyPct = ((buyVal - marketRate) / marketRate) * 100;
+          const sign = buyPct >= 0 ? "+" : "";
+          if (entType == 'XX' && (buyPct > 0 || secondToggle)) {
+            parts.push(`Rate = ${sign}${buyPct.toFixed(2)}%`);
+            if (buyPct < 0.5){ 
+              quality = 'insane';
+              resultText = 'GIGA GOOD DEFFO BUY.';
+            } else if (buyPct < 1 && buyPct >= 0.5) {
+              quality = 'excellent';
+              resultText = 'Pretty damn good.';
+            } else if (buyPct < 3 && buyPct >= 1) {
+              quality = 'good';
+              resultText = 'Compare with other stores.';
+            } else {
+              quality = 'bad';
+              resultText = 'Avoid unless absolutely necessary.'
+            }
+          parts.push(resultText);
+          }
+        }
+
+        if (hasSell) {
+          // For sell: a lower rate than market means you receive fewer units (worse for you)
+          const sellPct = ((sellVal - marketRate) / marketRate) * 100;
+          const sign = sellPct >= 0 ? "+" : "";
+          if (entType == 'HK' && (sellPct > 0 || secondToggle)) {
+            parts.push(`Rate = ${sign}${sellPct.toFixed(2)}%`);
+            if (sellPct < 0.5){ 
+              quality = 'insane';
+              resultText = 'GIGA GOOD DEFFO BUY.';
+            } else if (sellPct < 1 && sellPct >= 0.5) {
+              quality = 'excellent';
+              resultText = 'Pretty damn good.';
+            } else if (sellPct < 3 && sellPct >= 1) {
+              quality = 'good';
+              resultText = 'Compare with other stores.';
+            } else {
+              quality = 'bad';
+              resultText = 'Avoid unless absolutely necessary.'
+            }
+          parts.push(resultText);
+          }
+        }
+
+        if (parts.length === 0) {
+          parts.push('Please fill values or double check inputted values.');
+          secondToggle = true;
+        }
+
+
+        const inlineEl = document.getElementById("inline-result");
+        const inlineText = document.getElementById("inline-result-text");
+        inlineText.textContent = parts.join("   |   ");
+        inlineEl.style.display = "block";
+
+        if (quality === 'excellent' || quality === 'insane') {
+          inlineEl.style.borderColor = '#065f46';
+        } else if (quality === 'good') {
+          inlineEl.style.borderColor = '#92400e';
+        } else {
+          inlineEl.style.borderColor = '#991b1b';
+        }
+      }
+
+      // End Calculate
+
+      function formatRate(r) {
+        if (entType == 'HK') {
+          useRate = r**-1;
+        } else {
+          useRate = r;
+        }
+        if (useRate >= 1000) return useRate.toFixed(2);
+        if (useRate >= 10) return useRate.toFixed(4);
+        return useRate.toFixed(6);
+      }
+
+      // Allow Enter key on select to trigger fetch
+      document
+        .getElementById("currency-select")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") fetchRate();
         });
-      });
-    }
 
-    // Init
-    init();
-  </script>
-</body>
+      function returnToWelcome() {
+        const welcome = document.getElementById("welcome-screen");
+        const shell = document.getElementById("app-shell");
+
+        // Hide the app shell
+        shell.classList.add("hidden");
+
+        // Reset the welcome screen — clear the leaving animation if it was applied
+        welcome.classList.remove("leaving");
+        welcome.style.display = "";
+      }
+    </script>
+  </body>
 </html>
